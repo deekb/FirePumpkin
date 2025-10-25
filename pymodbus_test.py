@@ -27,20 +27,32 @@ def set_coil(coil, state):
         print(f"Coil {coil} set to {state}")
 
 def main():
-    # set_coil(IGNITER_SHUTOFF, False)
-    set_coil(PUMPKIN_1, True)
-    set_coil(PUMPKIN_2, True)
-    set_coil(PUMPKIN_3, True)
-    set_coil(PUMPKIN_4, True)
-    time.sleep(1)
-    set_coil(PUMPKIN_1, False)
-    set_coil(PUMPKIN_2, False)
-    set_coil(PUMPKIN_3, False)
-    set_coil(PUMPKIN_4, False)
+    set_coil(IGNITER_SHUTOFF, False)
+    # while True:
+    #     for coil_number in [PUMPKIN_1, PUMPKIN_3, PUMPKIN_2, PUMPKIN_4]:
+    #         set_coil(coil_number, True)
+    #         time.sleep(0.25)
+    #         set_coil(coil_number, False)
+    #         time.sleep(0.15)
+
+    # set_coil(PUMPKIN_1, True)
+    # set_coil(PUMPKIN_2, True)
+    # set_coil(PUMPKIN_3, True)
+    # set_coil(PUMPKIN_4, True)
+    # time.sleep(0.5)
+    # set_coil(PUMPKIN_1, False)
+    # set_coil(PUMPKIN_2, False)
+    # set_coil(PUMPKIN_3, False)
+    # set_coil(PUMPKIN_4, False)
 
 
 if __name__ == "__main__":
     try:
         main()
     finally:
+        set_coil(PUMPKIN_1, False)
+        set_coil(PUMPKIN_2, False)
+        set_coil(PUMPKIN_3, False)
+        set_coil(PUMPKIN_4, False)
+
         client.close()
