@@ -4,8 +4,7 @@ import zipfile
 import threading
 
 from FireBeat.map_reader.reader_factory import BeatSaberReaderFactory
-from FireBeat.constants import ZIP_PATH, NOTE_DURATION, LATENCY_COMPENSATION_OFFSET, NON_MAP_DAT_FILES, \
-    IGNITER_ARM_DELAY
+from FireBeat.constants import ZIP_PATH, NOTE_DURATION, LATENCY_COMPENSATION_OFFSET, NON_MAP_DAT_FILES, IGNITER_ARM_DELAY
 from FireBeat.player import play_audio
 from FireBeat.plc_controller import PLCController, PygamePLCController
 from FireBeat.logger import logger, suppress_alsa_warnings

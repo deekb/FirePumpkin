@@ -1,6 +1,6 @@
 import json
 from FireBeat.logger import logger
-from .base_reader import BaseMapReader
+from FireBeat.map_reader.base_reader import BaseMapReader
 
 class BeatSaberReaderV3(BaseMapReader):
     """Reader for Beat Saber map version 3.x."""

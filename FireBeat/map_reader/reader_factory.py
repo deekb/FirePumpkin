@@ -1,7 +1,7 @@
 import json
 import logging
-from .reader_v2 import BeatSaberReaderV2
-from .reader_v3 import BeatSaberReaderV3
+from FireBeat.map_reader.reader_v2 import BeatSaberReaderV2
+from FireBeat.map_reader.reader_v3 import BeatSaberReaderV3
 
 logger = logging.getLogger(__name__)
 

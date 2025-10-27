@@ -1,5 +1,5 @@
 import logging
-from .constants import config
+from FireBeat.constants import config
 
 import os
 import sys

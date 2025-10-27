@@ -6,7 +6,7 @@ from FireBeat.logger import logger
 
 
 def main():
-    plc = PLCController(is_dryrun=True)
+    plc = PLCController()
 
     plc.igniter_arm()
     logger.info(f"Waiting {IGNITER_ARM_DELAY}s for igniter arm delay...")
