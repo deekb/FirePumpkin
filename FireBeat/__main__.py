@@ -5,15 +5,18 @@ import threading
 
 from FireBeat.map_reader.reader_factory import BeatSaberReaderFactory
 from FireBeat.constants import ZIP_PATH, NOTE_DURATION, LATENCY_COMPENSATION_OFFSET, NON_MAP_DAT_FILES, IGNITER_ARM_DELAY
-from FireBeat.player import play_audio
+from FireBeat.soundplayer import play_audio
 from FireBeat.plc_controller import PLCController, PygamePLCController
 from FireBeat.logger import logger, suppress_alsa_warnings
+#from FireBeat.beatzip import BeatZipReader
 
+is_dryrun=True
 
 def main():
+    ZIP_PATH = Path(ZIP_PATH)
     logger.info(f"Opening Beat Saber archive: {ZIP_PATH}")
 
-    with zipfile.ZipFile(ZIP_PATH, "r") as zf, PLCController(is_dryrun=True) as plc:
+    with zipfile.ZipFile(ZIP_PATH, "r") as zf, PLCController(is_dryrun=is_dryrun) as plc:
         # with  as plc:
         filenames = zf.namelist()
         logger.debug(f"Files inside zip: {filenames}")
@@ -40,14 +43,25 @@ def main():
         maps_dat = [f for f in filenames if f.endswith(".dat") and f.lower() not in NON_MAP_DAT_FILES]
         logger.debug(f"Detected map files: {maps_dat}")
 
-        if not maps_dat:
+
+        if len(maps_dat) > 1:
+            print("Multiple map files found:", maps_dat)
+            for i, map_file in enumerate(maps_dat):
+                print(f"{i}: {map_file}")
+            print("Select a map file by index:")
+            index = int(input())
+            selected_map_file = maps_dat[index]
+        elif len(maps_dat) == 0:
             logger.error("No .dat map files found in archive!")
-            raise ValueError("No .dat map files found in zip.")
+            raise ValueError("No map files found!")
+        else:
+            print("Single map file found:", maps_dat[0])
+            selected_map_file = maps_dat[0]
 
-        selected_map = maps_dat[0]
-
-        reader = BeatSaberReaderFactory.create_reader_from_mapfile(zf.open(selected_map))
-        map_data = reader.load_map(zf, selected_map)
+        print(f"Selected map file: {selected_map_file}")
+        # Passes the selected filename
+        reader = BeatSaberReaderFactory.create_reader_from_mapfile(zf.open(selected_map_file))
+        map_data = reader.load_map(zf, selected_map_file)
         logger.debug(f"Loaded map data keys: {list(map_data.keys())}")
 
         schedule = reader.extract_notes(map_data, bpm, NOTE_DURATION)
@@ -55,11 +69,11 @@ def main():
 
         if len(schedule) == 0:
             raise RuntimeError("No notes detected — check map version or difficulty file!")
-
-        plc.igniter_arm()
-        logger.debug(f"Waiting {IGNITER_ARM_DELAY}s for igniter arm delay...")
-        time.sleep(IGNITER_ARM_DELAY)
-        logger.debug("Igniters are hot, commencing.")
+        if is_dryrun == False:
+            plc.igniter_arm()
+            logger.debug(f"Waiting {IGNITER_ARM_DELAY}s for igniter arm delay...")
+            time.sleep(IGNITER_ARM_DELAY)
+            logger.debug("Igniters are hot, commencing.")
 
         # Nonblocking playback
         stream, start_time = play_audio(zf, song_file)
