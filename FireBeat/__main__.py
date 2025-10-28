@@ -2,10 +2,11 @@ import json
 import time
 import zipfile
 import threading
+import os
 
 from FireBeat.map_reader.reader_factory import BeatSaberReaderFactory
-from FireBeat.constants import ZIP_PATH, NOTE_DURATION, LATENCY_COMPENSATION_OFFSET, NON_MAP_DAT_FILES, IGNITER_ARM_DELAY
-from FireBeat.player import play_audio
+from FireBeat.constants import ZIP_DIR, NOTE_DURATION, LATENCY_COMPENSATION_OFFSET, NON_MAP_DAT_FILES, IGNITER_ARM_DELAY
+from FireBeat.soundplayer import play_audio
 from FireBeat.plc_controller import PLCController, PygamePLCController
 from FireBeat.logger import logger, suppress_alsa_warnings
 #from FireBeat.beatzip import BeatZipReader
@@ -13,6 +14,15 @@ from FireBeat.logger import logger, suppress_alsa_warnings
 is_dryrun=True
 
 def main():
+
+    print("Select your song:")
+    zip_files = [filename for filename in os.listdir(ZIP_DIR) if filename.endswith('.zip')]
+    for i, zip_file in enumerate(zip_files, start=1):
+        print(f"{i}. {zip_file}")
+    choice = int(input("Enter the number for your song: ")) - 1
+    ZIP_PATH = os.path.join(ZIP_DIR, zip_files[choice])
+
+
     logger.info(f"Opening Beat Saber archive: {ZIP_PATH}")
 
     with zipfile.ZipFile(ZIP_PATH, "r") as zf, PLCController(is_dryrun=is_dryrun) as plc:

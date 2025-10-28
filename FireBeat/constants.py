@@ -6,7 +6,7 @@ CONFIG_PATH = Path(__file__).parent / "config.ini"
 config = configparser.ConfigParser()
 config.read(CONFIG_PATH)
 
-ZIP_PATH = config.get("paths", "zip_path")
+ZIP_DIR = config.get("paths", "zip_directory")
 NON_MAP_DAT_FILES = config.get("paths", "non_map_dat_files")
 
 PLC_IP = config.get("plc", "ip")
