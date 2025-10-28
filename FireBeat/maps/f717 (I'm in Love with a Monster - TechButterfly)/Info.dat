@@ -1,0 +1,152 @@
+{
+  "_version": "2.0.0",
+  "_songName": "I'm in Love with a Monster",
+  "_songSubName": "",
+  "_songAuthorName": "Fifth Harmony",
+  "_levelAuthorName": "TechButterfly",
+  "_beatsPerMinute": 145,
+  "_shuffle": 0,
+  "_shufflePeriod": 0.5,
+  "_previewStartTime": 48,
+  "_previewDuration": 13,
+  "_songFilename": "song.egg",
+  "_coverImageFilename": "cover.jpg",
+  "_environmentName": "DefaultEnvironment",
+  "_allDirectionsEnvironmentName": "GlassDesertEnvironment",
+  "_songTimeOffset": 0,
+  "_customData": {
+    "_contributors": []
+  },
+  "_difficultyBeatmapSets": [
+    {
+      "_beatmapCharacteristicName": "Standard",
+      "_difficultyBeatmaps": [
+        {
+          "_difficulty": "Normal",
+          "_difficultyRank": 3,
+          "_beatmapFilename": "NormalStandard.dat",
+          "_noteJumpMovementSpeed": 12,
+          "_noteJumpStartBeatOffset": 0.5,
+          "_customData": {
+            "_editorOffset": 0,
+            "_editorOldOffset": 0,
+            "_colorLeft": {
+              "r": 0.1333333,
+              "g": 0.5176471,
+              "b": 0.06666667
+            },
+            "_colorRight": {
+              "r": 0.3490196,
+              "g": 0,
+              "b": 0.7019608
+            },
+            "_envColorLeft": {
+              "r": 1,
+              "g": 0,
+              "b": 0
+            },
+            "_envColorRight": {
+              "r": 0.2509804,
+              "g": 0,
+              "b": 0.5019608
+            },
+            "_obstacleColor": {
+              "r": 1,
+              "g": 0.5019608,
+              "b": 0
+            },
+            "_warnings": [],
+            "_information": [],
+            "_suggestions": [],
+            "_requirements": []
+          }
+        },
+        {
+          "_difficulty": "Expert",
+          "_difficultyRank": 7,
+          "_beatmapFilename": "ExpertStandard.dat",
+          "_noteJumpMovementSpeed": 15,
+          "_noteJumpStartBeatOffset": 0,
+          "_customData": {
+            "_editorOffset": 0,
+            "_editorOldOffset": 0,
+            "_colorLeft": {
+              "r": 0.1333333,
+              "g": 0.5176471,
+              "b": 0.06666667
+            },
+            "_colorRight": {
+              "r": 0.3490196,
+              "g": 0,
+              "b": 0.7019608
+            },
+            "_envColorLeft": {
+              "r": 1,
+              "g": 0,
+              "b": 0
+            },
+            "_envColorRight": {
+              "r": 0.2509804,
+              "g": 0,
+              "b": 0.5019608
+            },
+            "_obstacleColor": {
+              "r": 1,
+              "g": 0.5019608,
+              "b": 0
+            },
+            "_warnings": [],
+            "_information": [],
+            "_suggestions": [],
+            "_requirements": []
+          }
+        }
+      ]
+    },
+    {
+      "_beatmapCharacteristicName": "360Degree",
+      "_difficultyBeatmaps": [
+        {
+          "_difficulty": "ExpertPlus",
+          "_difficultyRank": 9,
+          "_beatmapFilename": "ExpertPlus360Degree.dat",
+          "_noteJumpMovementSpeed": 13,
+          "_noteJumpStartBeatOffset": 0.4000000059604645,
+          "_customData": {
+            "_editorOffset": 0,
+            "_editorOldOffset": 0,
+            "_colorLeft": {
+              "r": 0.1333333,
+              "g": 0.5176471,
+              "b": 0.06666667
+            },
+            "_colorRight": {
+              "r": 0.3490196,
+              "g": 0,
+              "b": 0.7019608
+            },
+            "_envColorLeft": {
+              "r": 1,
+              "g": 0,
+              "b": 0
+            },
+            "_envColorRight": {
+              "r": 0.2509804,
+              "g": 0,
+              "b": 0.5019608
+            },
+            "_obstacleColor": {
+              "r": 1,
+              "g": 0.5019608,
+              "b": 0
+            },
+            "_warnings": [],
+            "_information": [],
+            "_suggestions": [],
+            "_requirements": []
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "_version": "2.1.0",
+  "_songName": "Ghostbusters",
+  "_songSubName": "",
+  "_songAuthorName": "Ray Parker Jr.",
+  "_levelAuthorName": "ramenator05",
+  "_beatsPerMinute": 116.0,
+  "_songTimeOffset": 0.0,
+  "_shuffle": 0.0,
+  "_shufflePeriod": 0.0,
+  "_previewStartTime": 30.0,
+  "_previewDuration": 10.0,
+  "_songFilename": "ghostBusters.egg",
+  "_coverImageFilename": "ghostBusters.png",
+  "_environmentName": "HalloweenEnvironment",
+  "_allDirectionsEnvironmentName": "GlassDesertEnvironment",
+  "_environmentNames": [],
+  "_colorSchemes": [],
+  "_difficultyBeatmapSets": [
+    {
+      "_beatmapCharacteristicName": "Standard",
+      "_difficultyBeatmaps": [
+        {
+          "_difficulty": "Expert",
+          "_difficultyRank": 7,
+          "_beatmapFilename": "Expert.dat",
+          "_noteJumpMovementSpeed": 16.0,
+          "_noteJumpStartBeatOffset": 0.0,
+          "_beatmapColorSchemeIdx": 0,
+          "_environmentNameIdx": 0,
+          "_customData": {
+            "_colorLeft": {
+              "r": 0.619,
+              "g": 0.619,
+              "b": 0.619
+            },
+            "_colorRight": {
+              "r": 0.081,
+              "g": 0.741,
+              "b": 0.291
+            },
+            "_envColorLeftBoost": {
+              "r": 0.094,
+              "g": 0.824,
+              "b": 0.252
+            },
+            "_envColorRightBoost": {
+              "r": 0.797,
+              "g": 0.094,
+              "b": 0.824
+            },
+            "_obstacleColor": {
+              "r": 0.374,
+              "g": 0.988,
+              "b": 0.57
+            },
+            "_envColorRight": {
+              "r": 0.094,
+              "g": 0.32,
+              "b": 0.824
+            },
+            "_envColorLeft": {
+              "r": 0.824,
+              "g": 0.094,
+              "b": 0.094
+            },
+            "_envColorWhite": {
+              "r": 0.897,
+              "g": 0.71,
+              "b": 0.174
+            },
+            "_envColorWhiteBoost": {
+              "r": 0.91,
+              "g": 0.57,
+              "b": 0.082
+            }
+          }
+        },
+        {
+          "_difficulty": "ExpertPlus",
+          "_difficultyRank": 9,
+          "_beatmapFilename": "ExpertPlus.dat",
+          "_noteJumpMovementSpeed": 18.0,
+          "_noteJumpStartBeatOffset": 0.5,
+          "_beatmapColorSchemeIdx": 0,
+          "_environmentNameIdx": 0,
+          "_customData": {
+            "_colorLeft": {
+              "r": 0.619,
+              "g": 0.619,
+              "b": 0.619
+            },
+            "_colorRight": {
+              "r": 0.081,
+              "g": 0.741,
+              "b": 0.291
+            },
+            "_envColorLeftBoost": {
+              "r": 0.094,
+              "g": 0.824,
+              "b": 0.252
+            },
+            "_envColorRightBoost": {
+              "r": 0.797,
+              "g": 0.094,
+              "b": 0.824
+            },
+            "_obstacleColor": {
+              "r": 0.374,
+              "g": 0.988,
+              "b": 0.57
+            },
+            "_envColorRight": {
+              "r": 0.094,
+              "g": 0.32,
+              "b": 0.824
+            },
+            "_envColorLeft": {
+              "r": 0.824,
+              "g": 0.094,
+              "b": 0.094
+            },
+            "_envColorWhite": {
+              "r": 0.897,
+              "g": 0.71,
+              "b": 0.174
+            },
+            "_envColorWhiteBoost": {
+              "r": 0.91,
+              "g": 0.57,
+              "b": 0.082
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
