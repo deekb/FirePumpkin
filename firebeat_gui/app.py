@@ -342,7 +342,7 @@ def inject_globals():
 # -----------------------------------------------------------------------------
 NAV_HTML = r"""
   <header class="flex items-center justify-between mb-4">
-    <h1 class="text-2xl font-bold">BeatSaver</h1>
+    <h1 class="text-2xl font-bold">The Fire Choir</h1>
     <nav class="flex gap-2">
       <a href="/" class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
                         dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
