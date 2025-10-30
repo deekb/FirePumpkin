@@ -95,6 +95,7 @@ class PygamePLCController:
         logger.warning("Safety net, closing all valves")
         for coil in PUMPKIN_COILS:
             self.set_coil(coil, False)
+        print("Done. It Ain't got no gas innit")
 
     def igniter_arm(self):
         self.set_coil(IGNITER_SHUTOFF, False)

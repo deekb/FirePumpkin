@@ -26,7 +26,7 @@ class BeatSaberReaderV2(BaseMapReader):
             logger.debug(f"Map contents sample (first 500 chars): {str(data)[:500]}")
         return data
 
-    def extract_notes(self, map_data, bpm, note_duration):
+    def extract_notes(self, map_data, bpm, note_duration, method): # method can be either modulus, or position
         logger.info("Extracting notes from v2 map.")
         notes = map_data.get("_notes", [])
         if not notes:
@@ -35,13 +35,23 @@ class BeatSaberReaderV2(BaseMapReader):
             logger.debug(f"First note sample: {notes[0]}")
 
         result = []
+
+        def whichpumpkin(i, note):
+            if method == "modulus":
+                return i % 4
+            elif method == "position":
+                logger.info("")
+                return note.get("_lineIndex", 0)
+            return 0
+
+
         for i, note in enumerate(notes):
             try:
                 start_time = note["_time"] / (bpm / 60)
                 result.append({
                     "start": start_time,
                     "end": start_time + note_duration,
-                    "pumpkin": i % 4
+                    "pumpkin": int(whichpumpkin(i, note))
                 })
             except KeyError as e:
                 logger.error(f"Malformed note entry missing key {e}: {note}")

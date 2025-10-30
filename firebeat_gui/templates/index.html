@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}BeatSaver Search{% endblock %}
+
+{% block content %}
+  <form id="search-form"
+        class="rounded-2xl shadow p-4 mb-6 grid gap-3 md:grid-cols-12
+               bg-white text-slate-900 border border-slate-200
+               dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800">
+    <input id="q" name="q" placeholder="Search songs, authors, tags…"
+           class="md:col-span-8 col-span-12 rounded-xl px-3 py-2
+                  border border-slate-300 bg-white text-slate-900 placeholder-slate-500
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500
+                  dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400"
+           required />
+    <button
+      class="md:col-span-4 col-span-12 rounded-xl px-4 py-2
+             bg-indigo-600 text-white hover:bg-indigo-700">
+      Search
+    </button>
+  </form>
+
+  <div id="meta" class="text-sm text-slate-600 dark:text-slate-400 mb-3"></div>
+  <div id="pager" class="flex gap-2 mb-3"></div>
+  <div id="grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+const API_SEARCH = (page, q) => `https://beatsaver.com/api/search/text/${page}?q=${encodeURIComponent(q)}`;
+
+const form   = document.getElementById('search-form');
+const grid   = document.getElementById('grid');
+const pager  = document.getElementById('pager');
+const meta   = document.getElementById('meta');
+const qInput = document.getElementById('q');
+
+let state = { q: "", page: 0, lastPage: 0, totalDocs: 0, docs: [] };
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  state.q = qInput.value.trim();
+  state.page = 0;
+  await search();
+});
+
+async function search() {
+  if (!state.q) return;
+  try {
+    const res = await fetch(API_SEARCH(state.page, state.q), {
+      headers: { "Accept": "application/json, text/plain, */*" }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    state.docs = data.docs || [];
+    state.totalDocs = data.totalDocs || (state.docs?.length || 0);
+    state.lastPage  = data.lastPage || 0;
+
+    render();
+  } catch (err) {
+    grid.innerHTML = alertBox("Error: " + err.message);
+    pager.innerHTML = "";
+    meta.textContent = "";
+  }
+}
+
+function render() {
+  meta.textContent = `~${state.totalDocs} results for “${state.q}” — page ${state.page}/${state.lastPage}`;
+
+  pager.innerHTML = "";
+  pager.append(makeBtn("Prev", state.page <= 1, async () => { state.page -= 1; await search(); }));
+  const span = document.createElement('span');
+  span.className = "px-3 py-1 text-sm text-slate-500 dark:text-slate-400 self-center";
+  span.textContent = `Page ${state.page} / ${state.lastPage}`;
+  pager.append(span);
+  pager.append(makeBtn("Next", state.page >= state.lastPage, async () => { state.page += 1; await search(); }));
+
+  grid.innerHTML = "";
+  for (const d of state.docs) {
+    const v0 = (d.versions && d.versions[0]) || {};
+    const cover = v0.coverURL || "";
+    const preview = v0.previewURL || "";
+    const downloadURL = v0.downloadURL || "";
+
+    const card = document.createElement('article');
+    card.className = `
+      rounded-2xl shadow overflow-hidden border
+      bg-white text-slate-900 border-slate-200
+      dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800
+    `;
+    card.innerHTML = `
+      ${cover ? `<img src="${cover}" alt="cover" class="w-full h-44 object-cover">` : ""}
+      <div class="p-4">
+        <h2 class="font-semibold text-lg">${escapeHTML(d.name || d.metadata?.songName || "Untitled")}</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          by ${escapeHTML(d.metadata?.songAuthorName || "Unknown")}
+          · mapped by ${escapeHTML(d.metadata?.levelAuthorName || d.uploader?.name || "Unknown")}
+        </p>
+        <dl class="grid grid-cols-2 gap-2 text-sm mt-3">
+          <div><dt class="text-slate-500 dark:text-slate-400">BPM</dt><dd>${d.metadata?.bpm ?? "—"}</dd></div>
+          <div><dt class="text-slate-500 dark:text-slate-400">Dur (s)</dt><dd>${d.metadata?.duration ?? "—"}</dd></div>
+          <div><dt class="text-slate-500 dark:text-slate-400">Score</dt><dd>${fmtScore(d.stats?.score)}</dd></div>
+          <div><dt class="text-slate-500 dark:text-slate-400">Votes</dt><dd>▲ ${d.stats?.upvotes ?? 0} &nbsp; ▼ ${d.stats?.downvotes ?? 0}</dd></div>
+          <div><dt class="text-slate-500 dark:text-slate-400">Plays</dt><dd>${d.stats?.plays ?? 0}</dd></div>
+          <div><dt class="text-slate-500 dark:text-slate-400">Ranked</dt><dd>${d.ranked ? "Yes" : "No"}</dd></div>
+        </dl>
+
+        <div class="flex flex-col gap-2 mt-3">
+          ${preview ? `<audio controls preload="none" class="w-full"><source src="${preview}" type="audio/mpeg"></audio>` : ""}
+          ${downloadURL ? `
+            <div class="flex gap-2">
+              <a class="px-3 py-1 rounded-lg border
+                        border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                        dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
+                 href="${downloadURL}">
+                Direct download
+              </a>
+              <button class="px-3 py-1 rounded-lg
+                             bg-indigo-600 text-white hover:bg-indigo-700"
+                      data-url="${downloadURL}">
+                Save ZIP on server
+              </button>
+            </div>` : ""}
+          <div class="text-xs text-slate-500 dark:text-slate-400 save-result mt-1"></div>
+        </div>
+      </div>
+    `;
+    grid.append(card);
+  }
+
+  grid.querySelectorAll("button[data-url]").forEach(btn => {
+    btn.addEventListener("click", () => saveZip(btn));
+  });
+}
+
+function makeBtn(label, disabled, onclick) {
+  const btn = document.createElement('button');
+  btn.className = `
+    px-3 py-1 rounded-lg border
+    border-slate-300 bg-white text-slate-900 hover:bg-slate-100 disabled:opacity-50
+    dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800
+  `;
+  btn.textContent = label;
+  btn.disabled = disabled;
+  btn.onclick = onclick;
+  return btn;
+}
+
+async function saveZip(btn) {
+  const url = btn.dataset.url;
+  const statusEl = btn.closest("article").querySelector(".save-result");
+  statusEl.textContent = "Saving on server…";
+  try {
+    const resp = await fetch("/api/download", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ downloadURL: url })
+    });
+    const data = await resp.json().catch(() => null);
+    if (!resp.ok || !data?.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
+    statusEl.innerHTML = `Saved: <code>${escapeHTML(data.rel)}</code> (${data.bytes} bytes)
+      — <a class="underline" href="/${encodeURI(data.rel)}">download from server</a>`;
+  } catch (e) {
+    statusEl.textContent = "Failed: " + e.message;
+  }
+}
+
+function fmtScore(s) { return (typeof s === "number") ? s.toFixed(4) : "—"; }
+
+function escapeHTML(s) {
+  if (s == null) return "";
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function alertBox(msg) {
+  return `<div class="rounded-xl p-4 border
+                  bg-red-50 text-red-700 border-red-200
+                  dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">
+            ${escapeHTML(msg)}
+          </div>`;
+}
+</script>
+{% endblock %}

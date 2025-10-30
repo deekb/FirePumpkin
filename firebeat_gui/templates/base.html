@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}FireBeat{% endblock %}</title>
+
+  <!-- Tailwind (or your CSS) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+  <div class="max-w-6xl mx-auto p-6">
+    <!-- Global nav -->
+    <header class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-bold">BeatSaver</h1>
+      <nav class="flex gap-2">
+        <a href="{{ url_for('index') }}"
+           class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                  dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
+          Search
+        </a>
+        <a href="{{ url_for('library') }}"
+           class="px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+          Library
+        </a>
+        <a href="{{ url_for('pumpkin_panel') }}"
+           class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                  dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
+          Pumpkin Panel
+        </a>
+        <button id="toggle-theme"
+          class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
+          Toggle theme
+        </button>
+      </nav>
+    </header>
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <script>
+    // Theme bootstrap + toggle (runs on every page)
+    (function () {
+      const stored = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const html = document.documentElement;
+      if (stored === 'dark' || (!stored && prefersDark) || (!stored && !prefersDark)) {
+        html.classList.add('dark');
+      } else {
+        html.classList.remove('dark');
+      }
+      document.getElementById('toggle-theme')?.addEventListener('click', () => {
+        const nowDark = !html.classList.contains('dark');
+        html.classList.toggle('dark', nowDark);
+        localStorage.setItem('theme', nowDark ? 'dark' : 'light');
+      });
+    })();
+  </script>
+
+  {% block body_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,5 @@
+flask
+requests
+pygame
+pymodbus
+flask-socketio

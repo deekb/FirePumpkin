@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+{% block title %}BeatSaver Library{% endblock %}
+
+{% block content %}
+  <form id="lib-search" class="rounded-2xl shadow p-4 mb-4 grid gap-3 md:grid-cols-12
+         bg-white text-slate-900 border border-slate-200
+         dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800">
+    <input id="q" name="q" placeholder="Filter by title, song author, mapper, or filename…"
+           class="md:col-span-7 col-span-12 rounded-xl px-3 py-2
+                  border border-slate-300 bg-white text-slate-900 placeholder-slate-500
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500
+                  dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder-slate-400"/>
+
+    <!-- Controls: Search / Clear / Upload -->
+    <div class="md:col-span-5 col-span-12 flex flex-wrap gap-2">
+      <button class="rounded-xl px-4 py-2 bg-indigo-600 text-white hover:bg-indigo-700">Search</button>
+      <button type="button" id="clear"
+              class="rounded-xl px-4 py-2 border
+                     border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                     dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+        Clear
+      </button>
+
+      <!-- Upload -->
+      <input id="zip-file" type="file" accept=".zip" class="hidden" />
+      <button type="button" id="upload-btn"
+              class="rounded-xl px-4 py-2 border
+                     border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                     dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+        Upload ZIP
+      </button>
+      <span id="upload-status" class="self-center text-sm text-slate-500 dark:text-slate-400"></span>
+    </div>
+  </form>
+
+  <div id="meta" class="text-sm text-slate-600 dark:text-slate-400 mb-3"></div>
+  <div id="grid" class="grid md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+const meta = document.getElementById('meta');
+const grid = document.getElementById('grid');
+const form = document.getElementById('lib-search');
+const qInput = document.getElementById('q');
+const uploadBtn = document.getElementById('upload-btn');
+const fileInput = document.getElementById('zip-file');
+const uploadStatus = document.getElementById('upload-status');
+
+function escapeHTML(s){
+  return (s??"").toString()
+    .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+}
+
+const state = {
+  all: [],
+  filtered: [],
+  q: new URLSearchParams(location.search).get("q")?.trim() || ""
+};
+
+if (state.q) qInput.value = state.q;
+
+init();
+
+function init(){
+  const url = state.q ? `/api/library?q=${encodeURIComponent(state.q)}` : "/api/library";
+  fetch(url).then(async (res) => {
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    state.all = data.items || [];
+    applyFilter();
+  }).catch(e => {
+    grid.innerHTML = errBox(e.message);
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    state.q = qInput.value.trim();
+    const sp = new URLSearchParams(location.search);
+    if (state.q) sp.set("q", state.q); else sp.delete("q");
+    history.replaceState(null, "", `${location.pathname}${sp.toString() ? "?" + sp : ""}`);
+    applyFilter();
+  });
+
+  document.getElementById('clear').addEventListener('click', () => {
+    qInput.value = "";
+    state.q = "";
+    const sp = new URLSearchParams(location.search);
+    sp.delete("q");
+    history.replaceState(null, "", location.pathname);
+    applyFilter();
+    qInput.focus();
+  });
+
+  let t;
+  qInput.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      state.q = qInput.value.trim();
+      applyFilter();
+    }, 120);
+  });
+
+  // Upload wire-up
+  uploadBtn.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', async () => {
+    const f = fileInput.files?.[0];
+    if (!f) return;
+    if (!f.name.toLowerCase().endsWith('.zip')) {
+      setUploadStatus('Only .zip files are allowed', true);
+      fileInput.value = '';
+      return;
+    }
+    await uploadZip(f);
+    fileInput.value = '';
+  });
+}
+
+function setUploadStatus(msg, isError=false){
+  uploadStatus.textContent = msg || '';
+  uploadStatus.classList.toggle('text-red-600', !!isError);
+  uploadStatus.classList.toggle('dark:text-red-400', !!isError);
+  if (msg) setTimeout(()=> setUploadStatus(''), 2500);
+}
+
+async function uploadZip(file){
+  try{
+    setUploadStatus('Uploading…');
+    const fd = new FormData();
+    fd.append('file', file);
+
+    const resp = await fetch('/api/upload', { method: 'POST', body: fd });
+    const data = await resp.json().catch(()=> ({}));
+    if (!resp.ok || !data?.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
+
+    setUploadStatus(`Uploaded ${escapeHTML(data.rel)} (${data.bytes} bytes)`);
+    // Refresh library
+    const res = await fetch('/api/library');
+    const json = await res.json();
+    state.all = json.items || [];
+    applyFilter();
+  }catch(e){
+    setUploadStatus(`Upload failed: ${e.message}`, true);
+  }
+}
+
+function applyFilter(){
+  const q = state.q.toLowerCase();
+  const hay = (d) => [d.songName, d.songAuthorName, d.levelAuthorName, d.zipName]
+                      .filter(Boolean).join(" ").toLowerCase();
+
+  state.filtered = q ? state.all.filter(d => hay(d).includes(q)) : state.all.slice();
+
+  meta.textContent = `${state.filtered.length}/${state.all.length} map${state.filtered.length===1?"":"s"} ${q ? `matching “${state.q}”` : ""}`;
+  render(state.filtered);
+}
+
+function render(items){
+  grid.innerHTML = "";
+  for (const d of items){
+    const card = document.createElement('article');
+    card.className = "rounded-2xl shadow overflow-hidden border bg-white text-slate-900 border-slate-200 dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800";
+    card.innerHTML = `
+      ${d.coverURL ? `<img src="${d.coverURL}" alt="cover" class="w-full h-44 object-cover">` : ""}
+      <div class="p-4">
+        <h2 class="font-semibold text-lg">${escapeHTML(d.songName || "Untitled")}</h2>
+        <p class="text-sm text-slate-600 dark:text-slate-400">
+          by ${escapeHTML(d.songAuthorName || "Unknown")}
+          · mapped by ${escapeHTML(d.levelAuthorName || "Unknown")}
+        </p>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
+          ZIP: <code>${escapeHTML(d.zipName)}</code>
+        </p>
+        <div class="mt-3 flex gap-2">
+          <a href="/${encodeURI(d.rel)}"
+             class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                    dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+            Download ZIP
+          </a>
+          <button type="button"
+                  class="px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                  data-rel="${encodeURI(d.rel)}"
+                  onclick="openShowDialog(this)">
+            Play Show
+          </button>
+        </div>
+        <div class="text-xs text-slate-500 dark:text-slate-400 mt-2 show-result"></div>
+      </div>`;
+    grid.append(card);
+  }
+
+  if (!items.length){
+    grid.innerHTML = `<div class="rounded-xl p-4 border
+      bg-amber-50 text-amber-800 border-amber-200
+      dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-800">
+      No matches. Try a different query.
+    </div>`;
+  }
+}
+
+function modal(html){
+  const wrap = document.createElement('div');
+  wrap.innerHTML = `
+    <div class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-black/50"></div>
+      <div class="relative rounded-2xl shadow-lg p-5 w-full max-w-lg
+                  bg-white text-slate-900 border border-slate-200
+                  dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800">
+        ${html}
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+  return { el: wrap, close(){ wrap.remove(); } };
+}
+
+async function openShowDialog(btn){
+  const rel = btn.getAttribute("data-rel");
+  const card = btn.closest("article");
+  const out  = card.querySelector(".show-result");
+  out.textContent = "Loading maps…";
+
+  try{
+    const r = await fetch(`/api/maps?zipRel=${encodeURIComponent(decodeURI(rel))}`, { headers: { "Accept": "application/json" } });
+    const d = await r.json();
+    if(!r.ok || !d?.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+    out.textContent = "";
+
+    const maps = d.maps || [];
+    if(!maps.length){ out.textContent = "No map files found."; return; }
+
+    const m = modal(`
+      <h3 class="text-lg font-semibold mb-3">Choose map</h3>
+      <select id="map-select" class="w-full rounded-xl px-3 py-2 mb-4
+               border border-slate-300 bg-white text-slate-900
+               focus:outline-none focus:ring-2 focus:ring-indigo-500
+               dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+        ${maps.map(n => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join("")}
+      </select>
+
+      <fieldset class="mb-4">
+        <legend class="text-sm text-slate-600 dark:text-slate-400 mb-2">Playback method</legend>
+        <div class="flex gap-4 items-center text-sm">
+          <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="method" value="position" checked>
+            <span>Position</span>
+          </label>
+          <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="method" value="modulus">
+            <span>Modulus</span>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="flex gap-2 justify-end">
+        <button id="cancel"
+          class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">Cancel</button>
+        <button id="start"
+          class="px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">Start Show</button>
+      </div>
+    `);
+
+    m.el.querySelector('#cancel').addEventListener('click', () => m.close());
+    m.el.querySelector('#start').addEventListener('click', async () => {
+      const mapFile = m.el.querySelector('#map-select').value;
+      const method  = m.el.querySelector('input[name="method"]:checked')?.value || 'position';
+      try{
+        const resp = await fetch("/api/show", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ zipRel: decodeURI(rel), mapFile, method })
+        });
+        const data = await resp.json().catch(() => ({}));
+        if(!resp.ok || !data?.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
+        m.close();
+        window.location.href = data.control_url; // /show/<id>
+      }catch(e){
+        out.textContent = "Start failed: " + e.message;
+      }
+    });
+  }catch(e){
+    out.textContent = "Failed: " + e.message;
+  }
+}
+
+function errBox(msg){
+  return `<div class="rounded-xl p-4 border bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800">Failed: ${escapeHTML(msg)}</div>`;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Show Control{% endblock %}
+
+{% block content %}
+<section class="rounded-2xl shadow p-6 border bg-white text-slate-900 border-slate-200
+                dark:bg-slate-900 dark:text-slate-100 dark:border-slate-800">
+  <h2 class="text-xl font-semibold mb-2">Show Control</h2>
+  <p class="text-sm text-slate-600 dark:text-slate-400 mb-4">
+    Show ID: <code id="show-id"></code>
+  </p>
+
+  <dl class="grid grid-cols-2 gap-3 text-sm">
+    <div>
+      <dt class="text-slate-500 dark:text-slate-400">Status</dt>
+      <dd id="status">—</dd>
+    </div>
+    <div>
+      <dt class="text-slate-500 dark:text-slate-400">Message</dt>
+      <dd id="message">—</dd>
+    </div>
+    <div>
+      <dt class="text-slate-500 dark:text-slate-400">Method</dt>
+      <dd id="method">—</dd>
+    </div>
+    <div>
+      <dt class="text-slate-500 dark:text-slate-400">Started</dt>
+      <dd id="started-at">—</dd>
+    </div>
+    <div class="col-span-2">
+      <dt class="text-slate-500 dark:text-slate-400">ZIP Path</dt>
+      <dd id="zip-path" class="break-all">—</dd>
+    </div>
+    <div class="col-span-2">
+      <dt class="text-slate-500 dark:text-slate-400">Map File</dt>
+      <dd id="map-file" class="break-all">—</dd>
+    </div>
+  </dl>
+
+  <div class="mt-5 flex gap-2">
+    <button id="stop-btn"
+            class="px-3 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-50">
+      Stop Show
+    </button>
+    <a href="{{ url_for('library') }}"
+       class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+              dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+      Back to Library
+    </a>
+  </div>
+</section>
+{% endblock %}
+
+{% block body_scripts %}
+<script>
+const showId   = location.pathname.split("/").pop();
+document.getElementById('show-id').textContent = showId;
+
+const $status   = document.getElementById('status');
+const $message  = document.getElementById('message');
+const $zipPath  = document.getElementById('zip-path');
+const $mapFile  = document.getElementById('map-file');
+const $method   = document.getElementById('method');
+const $started  = document.getElementById('started-at');
+const $stopBtn  = document.getElementById('stop-btn');
+
+async function poll(){
+  try{
+    const r = await fetch(`/api/show/${showId}/status`, { headers: { "Accept": "application/json" } });
+    const d = await r.json();
+    if(!r.ok || !d?.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+
+    $status.textContent  = d.status || '—';
+    $message.textContent = d.message || '';
+    $zipPath.textContent = d.zip_path || '';
+    $mapFile.textContent = d.map_file || '';
+    $method.textContent  = (d.method || 'normal');
+    $started.textContent = d.started_at ? new Date(d.started_at * 1000).toLocaleString() : '—';
+
+    const finished = ["done","stopped","error"].includes((d.status||'').toLowerCase());
+    $stopBtn.disabled = finished;
+  }catch(e){
+    $status.textContent = "error";
+    $message.textContent = e.message;
+    $stopBtn.disabled = true;
+  }
+}
+
+$stopBtn.addEventListener('click', async () => {
+  $stopBtn.disabled = true;
+  try{
+    const r = await fetch(`/api/show/${showId}/stop`, { method: "POST" });
+    const d = await r.json().catch(() => ({}));
+    if(!r.ok || !d?.ok) throw new Error(d?.error || `HTTP ${r.status}`);
+  }catch(e){
+    $message.textContent = "Stop failed: " + e.message;
+  }finally{
+    poll();
+  }
+});
+
+poll();
+setInterval(poll, 1000);
+</script>
+{% endblock %}

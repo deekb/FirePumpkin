@@ -19,16 +19,25 @@ class BeatSaberReaderV3(BaseMapReader):
         logger.debug(f"Loaded map with {len(data.get('colorNotes', []) or data.get('basicBeatmapEvents', []))} color notes.")
         return data
 
-    def extract_notes(self, map_data, bpm, note_duration):
+    def extract_notes(self, map_data, bpm, note_duration, method):
         logger.info("Extracting notes from v3 map.")
         notes = map_data.get("colorNotes", None) or map_data.get("basicBeatmapEvents", None)
         result = []
+
+        def whichpumpkin(i, note):
+            if method == "modulus":
+                return i % 4
+            elif method == "position":
+                return note.get("x", 0)
+            return 0
+
+
         for i, note in enumerate(notes):
             start_time = note["b"] / (bpm / 60)
             result.append({
                 "start": start_time,
                 "end": start_time + note_duration,
-                "pumpkin": i % 4
+                "pumpkin": int(whichpumpkin(i, note))
             })
         logger.debug(f"Extracted {len(result)} firing timings.")
         logger.debug(f"first 100 timings: {result[:100]}")

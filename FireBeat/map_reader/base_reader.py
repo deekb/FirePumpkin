@@ -16,5 +16,5 @@ class BaseMapReader(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def extract_notes(self, map_data, bpm, note_duration):
+    def extract_notes(self, map_data, bpm, note_duration, method):
         pass

@@ -14,6 +14,9 @@ from FireBeat.logger import logger, suppress_alsa_warnings
 is_dryrun=True
 
 def main():
+    print("Welcome to FireBeat!")
+
+    print(f"Running in dryrun mode: {is_dryrun}")
 
     print("Select your song:")
     zip_files = [filename for filename in os.listdir(ZIP_DIR) if filename.endswith('.zip')]
@@ -68,12 +71,25 @@ def main():
             selected_map_file = maps_dat[0]
 
         print(f"Selected map file: {selected_map_file}")
+
+        #selecting the map decoding method
+        print("Which playback method would you like to use?")
+        print("1. Modulus")
+        print("2. Note position based")
+        method = input("Which playback method would you like to use?")
+        if method == "1":
+            print("Using modulus playback method.")
+            method = "modulus"
+        elif method == "2":
+            print("Using position-based playback method.")
+            method = "position"
+
         # Passes the selected filename
         reader = BeatSaberReaderFactory.create_reader_from_mapfile(zf.open(selected_map_file))
         map_data = reader.load_map(zf, selected_map_file)
         logger.debug(f"Loaded map data keys: {list(map_data.keys())}")
 
-        schedule = reader.extract_notes(map_data, bpm, NOTE_DURATION)
+        schedule = reader.extract_notes(map_data, bpm, NOTE_DURATION, method)
         logger.info(f"Extracted {len(schedule)} firing timings from map.")
 
         if len(schedule) == 0:

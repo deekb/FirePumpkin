@@ -21,6 +21,7 @@ def run_blocking_action(
     stop_event: threading.Event,
     set_status: Callable[[str, str], None],
     map_file: Optional[str],
+    method: str = "normal",
     is_dryrun: bool = True,
 ):
     """
@@ -54,7 +55,7 @@ def run_blocking_action(
 
             reader = BeatSaberReaderFactory.create_reader_from_mapfile(zf.open(map_file))
             map_data = reader.load_map(zf, map_file)
-            schedule = reader.extract_notes(map_data, bpm, NOTE_DURATION)
+            schedule = reader.extract_notes(map_data, bpm, NOTE_DURATION, method=method)
             if not schedule:
                 raise RuntimeError("No notes detected — check map/difficulty")
 
