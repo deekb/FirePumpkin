@@ -9,9 +9,9 @@ class PLCController:
     def __init__(self, is_dryrun=False):
         logger.info(f"Connecting to PLC at {PLC_IP}:{PLC_PORT}")
         self.is_dryrun = is_dryrun
-        if not self.is_dryrun:
+        if not self.is_dryrun: # If dryrun passed is false (ACTIVE), connect to PLC
             self.client = ModbusTcpClient(PLC_IP, port=PLC_PORT)
-            if not self.client.connect():
+            if not self.client.connect(): #if connection above failed, halt
                 logger.critical("Failed to connect to PLC.")
                 raise ConnectionError(f"Failed to connect to PLC at {PLC_IP}:{PLC_PORT}")
             logger.info("PLC connected successfully.")
@@ -92,6 +92,9 @@ class PygamePLCController:
     def igniter_disarm(self):
         self.set_coil(IGNITER_SHUTOFF, True)
         logger.warning("Disarming igniter.")
+        logger.warning("Safety net, closing all valves")
+        for coil in PUMPKIN_COILS:
+            self.set_coil(coil, False)
 
     def igniter_arm(self):
         self.set_coil(IGNITER_SHUTOFF, False)

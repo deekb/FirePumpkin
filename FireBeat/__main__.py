@@ -25,7 +25,7 @@ def main():
 
     logger.info(f"Opening Beat Saber archive: {ZIP_PATH}")
 
-    with zipfile.ZipFile(ZIP_PATH, "r") as zf, PLCController(is_dryrun=is_dryrun) as plc:
+    with zipfile.ZipFile(ZIP_PATH, "r") as zf:
         # with  as plc:
         filenames = zf.namelist()
         logger.debug(f"Files inside zip: {filenames}")
@@ -79,26 +79,32 @@ def main():
         if len(schedule) == 0:
             raise RuntimeError("No notes detected — check map version or difficulty file!")
         if is_dryrun == False:
+            plc = PLCController(is_dryrun=is_dryrun)
             plc.igniter_arm()
             logger.debug(f"Waiting {IGNITER_ARM_DELAY}s for igniter arm delay...")
             time.sleep(IGNITER_ARM_DELAY)
             logger.debug("Igniters are hot, commencing.")
 
-        # Nonblocking playback
-        stream, start_time = play_audio(zf, song_file)
+            # Nonblocking playback
+            stream, start_time = play_audio(zf, song_file) #start music
 
-        # t = threading.Thread(target=plc.run_schedule, args=(schedule, stream, start_time))
-        # t.start()
-        # t.join()
+            t = threading.Thread(target=plc.run_schedule, args=(schedule, stream, start_time))
+            t.start()
+            t.join()
+        elif is_dryrun == True:
+            plc = PygamePLCController()
 
-        plc = PygamePLCController()
+            logger.info("Dryrun mode enabled. Skipping Igniter Arm delay.")
 
-        # Start schedule in a background thread
-        schedule_thread = threading.Thread(target=plc.run_schedule, args=(schedule, stream, start_time + LATENCY_COMPENSATION_OFFSET))
-        schedule_thread.start()
+            # Nonblocking playback
+            stream, start_time = play_audio(zf, song_file) #start music
 
-        # Run pygame loop in the main thread (blocks until window closed)
-        plc.run_pygame_loop()
+            # Start schedule in a background thread
+            schedule_thread = threading.Thread(target=plc.run_schedule, args=(schedule, stream, start_time + LATENCY_COMPENSATION_OFFSET))
+            schedule_thread.start()
+            # Run pygame loop in the main thread (blocks until window closed)
+            plc.run_pygame_loop()
+
 
         # Wait for schedule to finish
         schedule_thread.join()
@@ -111,4 +117,7 @@ if __name__ == "__main__":
         try:
             main()
         except KeyboardInterrupt:
+            with PLCController(is_dryrun=is_dryrun) as plc:
+                plc.igniter_disarm() #disables igniters, and safetynet closes all the valves
+                logger.info("Kill detected, shutting down safely")
             logger.error("User interrupted.")
