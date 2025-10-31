@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Pumpkin Iframe Panel{% endblock %}
+
+{% block head_extra %}
+<style>
+  :root { --bg:#0b0b0d; --card:#16161a; --accent:#2cb67d; --warn:#ef4444; --text:#eaeaea; --muted:#9ca3af; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { background:var(--bg); color:var(--text); }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 16px; }
+  .card { background:var(--card); border-radius: 16px; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+  iframe { width: 100%; height: 600px; border: none; border-radius: 16px; background: #111; }
+  .header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+  .label { font-size:14px; color:var(--muted); }
+</style>
+
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="header">
+    <h2>Pumpkin Panel Embed</h2>
+    <div class="label">Live control interface preview</div>
+  </div>
+
+  <div class="card">
+      <iframe id="pumpkin-frame"></iframe>
+      <script>const port = 8888; // your target port
+      const host = window.location.hostname;
+      const protocol = window.location.protocol;
+      document.getElementById('pumpkin-frame').src = `${protocol}//${host}:${port}`;
+      </script>
+  </div>
+</div>
+{% endblock %}

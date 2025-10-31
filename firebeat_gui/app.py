@@ -388,6 +388,10 @@ def show_control(show_id):
     # templates/show_control.html
     return render_template("show_control.html")
 
+@app.get("/ledfx")
+def ledfx():
+    return render_template("ledfxiframe.html")
+
 
 # -----------------------------------------------------------------------------
 # Socket.IO events (shared)
