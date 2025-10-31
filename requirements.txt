@@ -3,3 +3,5 @@ requests
 pygame
 pymodbus
 flask-socketio
+sounddevice
+soundfile

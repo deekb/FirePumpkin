@@ -31,6 +31,12 @@
                   dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
           Pumpkin Panel
         </a>
+        <a id="ledfx-link"
+           class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
+                  dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+           href="#">
+          LEDfx Panel
+        </a>
         <button id="toggle-theme"
           class="px-3 py-1 rounded-lg border border-slate-300 bg-white text-slate-900 hover:bg-slate-100
                  dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
@@ -38,6 +44,16 @@
         </button>
       </nav>
     </header>
+
+    <script>
+      // Dynamically set the Pumpkin Iframe link to same host, different port
+      const port = 8888; // change as needed
+      const host = window.location.hostname;
+      const protocol = window.location.protocol;
+      const iframeURL = `${protocol}//${host}:${port}`;
+      document.getElementById('pumpkin-iframe-link').href = iframeURL;
+    </script>
+
 
     {% block content %}{% endblock %}
   </div>
