@@ -666,25 +666,40 @@ def serve_saved(filename):
 # -----------------------------------------------------------------------------
 @app.get("/api/maps")
 def api_maps():
-    zip_rel = (request.args.get("zipRel") or "").strip()
-    if not zip_rel:
+    raw = (request.args.get("zipRel") or "").strip()
+    if not raw:
         return jsonify({"error": "Missing zipRel"}), 400
-    rel = zip_rel.lstrip("/")
-    prefix = f"{ZIP_DIR.name}/"
-    if rel.startswith(prefix):
-        rel = rel[len(prefix):]
+
     try:
-        path = _safe_join_downloads(rel)
+        base = ZIP_DIR.resolve()
+        p = Path(raw)
+
+        if p.is_absolute():
+            # Absolute path: only accept if it lives under ZIP_DIR
+            candidate = p.resolve()
+            if base not in candidate.parents:
+                return jsonify({"error": "Not found"}), 404
+            path = candidate
+        else:
+            # Relative path: allow optional "<ZIP_DIR.name>/" prefix
+            rel = raw.lstrip("/")
+            prefix = f"{ZIP_DIR.name}/"
+            if rel.startswith(prefix):
+                rel = rel[len(prefix):]
+            path = _safe_join_downloads(rel)
+
         with ZipFile(path, "r") as zf:
             names = zf.namelist()
         maps = [n for n in names if n.endswith(".dat") and n.lower() not in NON_MAP_DAT_FILES]
         maps.sort(key=lambda s: (s.count("/"), s.lower()))
-        return jsonify({"ok": True, "zip_rel": f"{ZIP_DIR.name}/{rel}", "maps": maps})
+        return jsonify({"ok": True, "zip_rel": f"{ZIP_DIR.name}/{path.name}", "maps": maps})
+
     except FileNotFoundError:
         return jsonify({"error": "Not found"}), 404
     except Exception:
-        logger.exception("api_maps: failed for %s", zip_rel)
+        logger.exception("api_maps: failed for %s", raw)
         return jsonify({"error": "Unexpected error"}), 500
+
 
 
 @app.post("/api/show")
