@@ -681,11 +681,13 @@ def api_maps():
                 return jsonify({"error": "Not found"}), 404
             path = candidate
         else:
-            # Relative path: allow optional "<ZIP_DIR.name>/" prefix
-            rel = raw.lstrip("/")
+            # Relative path: allow optional "<ZIP_DIR.name>/" prefix and normalize slashes
+            rel = raw.lstrip("/\\")
             prefix = f"{ZIP_DIR.name}/"
             if rel.startswith(prefix):
                 rel = rel[len(prefix):]
+            # Normalize backslashes that might come from Windows-y callers
+            rel = rel.replace("\\", "/")
             path = _safe_join_downloads(rel)
 
         with ZipFile(path, "r") as zf:
@@ -701,7 +703,6 @@ def api_maps():
         return jsonify({"error": "Unexpected error"}), 500
 
 
-
 @app.post("/api/show")
 def api_show_start():
     if not request.is_json:
@@ -710,18 +711,30 @@ def api_show_start():
 
     zip_rel  = (body.get("zipRel")  or "").strip()
     map_file = (body.get("mapFile") or "").strip() or None
+    method   = (body.get("method")  or "").strip() or "normal"
+
     if not zip_rel:
         return jsonify({"error": "Missing zipRel"}), 400
     if not map_file:
         return jsonify({"error": "Missing mapFile"}), 400
-    method = (body.get("method") or "").strip() or "normal"
-    rel = zip_rel.lstrip("/")
-    prefix = f"{ZIP_DIR.name}/"
-    if rel.startswith(prefix):
-        rel = rel[len(prefix):]
 
     try:
-        path = _safe_join_downloads(rel)
+        base = ZIP_DIR.resolve()
+        p = Path(zip_rel)
+
+        if p.is_absolute():
+            candidate = p.resolve()
+            if base not in candidate.parents:
+                return jsonify({"error": "ZIP not found"}), 404
+            path = candidate
+        else:
+            rel = zip_rel.lstrip("/\\")
+            prefix = f"{ZIP_DIR.name}/"
+            if rel.startswith(prefix):
+                rel = rel[len(prefix):]
+            rel = rel.replace("\\", "/")
+            path = _safe_join_downloads(rel)
+
         if not path.exists() or not path.is_file():
             return jsonify({"error": "ZIP not found"}), 404
 
@@ -772,6 +785,7 @@ def api_show_start():
         logger.exception("api_show_start: unexpected error")
         return jsonify({"error": "Unexpected error"}), 500
 
+
 @app.get("/api/show/<show_id>/status")
 def api_show_status(show_id):
     with SHOWS_LOCK:
@@ -789,6 +803,7 @@ def api_show_status(show_id):
             "ended_at": show["ended_at"],
         })
 
+
 @app.post("/api/show/<show_id>/stop")
 def api_show_stop(show_id):
     with SHOWS_LOCK:
@@ -799,6 +814,7 @@ def api_show_stop(show_id):
             return jsonify({"ok": True, "status": show["status"], "message": "Already finished"})
         show["stop_event"].set()
     return jsonify({"ok": True, "message": "Stop requested"})
+
 
 # -----------------------------------------------------------------------------
 # Entry point — IMPORTANT: use socketio.run to enable websockets
